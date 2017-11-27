@@ -16,13 +16,15 @@ int main()
 	wl = 0;
 	while ((c = getchar()) != EOF) {
 		if (c == ' ' || c == '\n' || c == '\t') {
+			if (state == IN)
+				lengths[wl]++;
 			state = OUT;
-		} else if (state == OUT && !(c == ' ' || c == '\n' || c == '\t')) {
+		} else {
+			if (state == OUT)
+				wl = 1;
+			else
+				wl++;
 			state = IN;
-			lengths[wl]++;
-			wl = 1;
-		} else if (state == IN) {
-			wl++;
 		}
 	}
 
