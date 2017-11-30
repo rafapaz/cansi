@@ -1,30 +1,27 @@
 #include <stdio.h>
 
 void printbin(int n);
-unsigned getbits(unsigned x, int p, int n);
+unsigned isodd(unsigned x);
 
 int main()
 {
-	int x = 3498;
-	int p = 10;
-	int n = 10;
+	int x;
+	scanf("%d", &x);
 	printbin(x);
-	printbin(p);
-	printbin(n);
-	printf("getbits(%d,%d,%d) = ", x,p,n);
-	printbin(getbits(x,p,n));
+	printf("is odd? %d\n", isodd(x));
 	return 0;
 }
 
-unsigned getbits(unsigned x, int p, int n)
+unsigned isodd(unsigned x)
 {
-	return (x >> (p+1-n)) & ~(~0 << n);
+	return (x & 1);
 }
 
 void printbin(int n)
 {
   int c, k;
  
+  printf("%d : ", n);
   for (c = 31; c >= 0; c--)
   {
     k = n >> c;
