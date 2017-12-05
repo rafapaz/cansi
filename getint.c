@@ -1,5 +1,6 @@
 #include <ctype.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #define BUFSIZE 999
 char buf[BUFSIZE];
@@ -28,15 +29,16 @@ int getint(int *pn)
 	int c, sign;
 	while (isspace(c = getch())); /* skip white space */
 		
-	if (!isdigit(c) && c != EOF && c != '+' && c != '-') {
-		ungetch(c); /* it is not a number */
-		return 0;
+	while (!isdigit(c) && c != EOF && c != '+' && c != '-') {
+		//ungetch(c); /* it is not a number */
+		c = getch();
+		//return 0;
 	}
 	sign = (c == '-') ? -1 : 1;
 	if (c == '+' || c == '-')
 		c = getch();
 	for (*pn = 0; isdigit(c); c = getch())
-		*pn = 10 * *pn + (c - '0');
+		*pn = 10 * (*pn) + (c - '0');
 	*pn *= sign;
 	if (c != EOF)
 		ungetch(c);
@@ -45,9 +47,12 @@ int getint(int *pn)
 
 int main()
 {
-	int *pn;
+	int *pn = malloc(sizeof(int));
 
+	//while (getint(pn) != EOF);
 	getint(pn);
+
+	printf("%d", *pn);
 
 	return 0;
 }
