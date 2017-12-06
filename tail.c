@@ -1,43 +1,54 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define MAXLINE 1000 /* maximum input line length */
 
-int mygetline(char *line);
-void copy(char to[], char from[]);
+int mygetline(char **line);
+void copy(char **to, char **from);
 
 /* print the longest input line */
 int main()
 {
-	int n=10;
+	int n=10, i=0, j=0;
 	char *line; /* current input line */
 	char **lines;
 
-	line = malloc(sizeof(char));
-	lines = malloc(n * sizeof(*char));
+	lines = malloc((n+1) * sizeof(char*));
 
-	while (mygetline(line) > 0) {
-		lines[n--] = malloc(strlen(line)+1);
+	while (mygetline(&line) > 0) {
+		lines[i++] = malloc(strlen(line)+1);
+		copy(&lines[i-1], &line);
 		free(line);
+
+		if (i > n) {
+			free(lines[0]);
+			for (j=0;j<n;j++)
+				lines[j] = lines[j+1];
+
+			i = n;
+		}
 	}
-		
-	//printf("%s", line);
+	
+	for (j=0;j<n;j++)
+		printf("%s", lines[j]);
 
 	return 0;
 }
 
 /* mygetline: read a line into s, return length */
-int mygetline(char *s)
+int mygetline(char **s)
 {
 	int c, i;
 
+	*s = malloc(sizeof(char));
 	for (i=0; (c=getchar())!=EOF && c!='\n'; ++i) {
-		realloc(s, sizeof(char)*(i+1));
-		s[i] = c;
+		realloc(*s, sizeof(char)*(i+1));
+		*s[i] = c;
 	}
 	if (c == '\n') {
-		realloc(s, sizeof(char)*(i+1));
-		s[i] = c;
+		realloc(*s, sizeof(char)*(i+1));
+		*s[i] = c;
 		++i;
 	}
 
@@ -47,10 +58,10 @@ int mygetline(char *s)
 }
 
 /* copy: copy 'from' into 'to'; assume to is big enough */
-void copy(char to[], char from[])
+void copy(char **to, char **from)
 {
 	int i=0;
 
-	while ((to[i] = from[i]) != '\0')
+	while ((*to[i] = *from[i]) != '\0')
 		++i;
 }
