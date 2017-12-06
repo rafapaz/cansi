@@ -5,7 +5,7 @@
 #define MAXLINE 9999 /* maximum input line length */
 
 int mygetline(char **line);
-void copy(char **to, char **from);
+void copy(char **to, char *from);
 
 /* print the longest input line */
 int main()
@@ -15,10 +15,12 @@ int main()
 	char **lines;
 
 	lines = malloc((n+1) * sizeof(char*));
+	for (j=0;j<n;j++)
+		lines[j] = NULL;
 
 	while (mygetline(&line) > 0) {
 		lines[i++] = malloc(strlen(line)+1);
-		copy(&lines[i-1], &line);
+		strcpy(lines[i-1], line);
 		free(line);
 
 		if (i > n) {
@@ -31,7 +33,7 @@ int main()
 	}
 	
 	for (j=0;j<n;j++)
-		printf("%s", lines[j]);
+		if (lines[j] != NULL) printf("%s", lines[j]);
 
 	return 0;
 }
@@ -42,27 +44,25 @@ int mygetline(char **s)
 	int c, i;
 	char temp[MAXLINE];
 
-	*s = malloc(sizeof(char));
 	for (i=0; (c=getchar())!=EOF && c!='\n'; ++i) {
-		realloc(*s, sizeof(char)*(i+1));
-		*s[i] = c;
+		temp[i] = c;
 	}
 	if (c == '\n') {
-		realloc(*s, sizeof(char)*(i+1));
-		*s[i] = c;
+		temp[i] = c;
 		++i;
 	}
 
-	realloc(s, sizeof(char)*(i+1));
-	*s[i] = '\0';
+	temp[i] = '\0';
+	*s = malloc((strlen(temp)+1) * sizeof(char));
+	strcpy(*s, temp);
 	return i;
 }
 
 /* copy: copy 'from' into 'to'; assume to is big enough */
-void copy(char **to, char **from)
+void copy(char **to, char *from)
 {
 	int i=0;
 
-	while ((*to[i] = *from[i]) != '\0')
+	while ((*to[i] = from[i]) != '\0')
 		++i;
 }
