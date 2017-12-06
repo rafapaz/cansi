@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define MAXLINE 1000 /* maximum input line length */
+#define MAXLINE 9999 /* maximum input line length */
 
 int mygetline(char **line);
 void copy(char **to, char **from);
@@ -40,6 +40,7 @@ int main()
 int mygetline(char **s)
 {
 	int c, i;
+	char temp[MAXLINE];
 
 	*s = malloc(sizeof(char));
 	for (i=0; (c=getchar())!=EOF && c!='\n'; ++i) {
@@ -53,7 +54,7 @@ int mygetline(char **s)
 	}
 
 	realloc(s, sizeof(char)*(i+1));
-	s[i] = '\0';
+	*s[i] = '\0';
 	return i;
 }
 
