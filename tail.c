@@ -5,22 +5,24 @@
 #define MAXLINE 9999 /* maximum input line length */
 
 int mygetline(char **line);
-void copy(char **to, char *from);
+char *mystrdup(char *s);
 
 /* print the longest input line */
-int main()
+int main(int argc, char **argv)
 {
 	int n=10, i=0, j=0;
 	char *line; /* current input line */
 	char **lines;
 
-	lines = malloc((n+1) * sizeof(char*));
+	if (argc > 1)
+		n = atoi(argv[1]);
+
+	lines = (char **) malloc((n+1) * sizeof(char*));
 	for (j=0;j<n;j++)
 		lines[j] = NULL;
 
 	while (mygetline(&line) > 0) {
-		lines[i++] = malloc(strlen(line)+1);
-		strcpy(lines[i-1], line);
+		lines[i++] = mystrdup(line);
 		free(line);
 
 		if (i > n) {
@@ -53,16 +55,16 @@ int mygetline(char **s)
 	}
 
 	temp[i] = '\0';
-	*s = malloc((strlen(temp)+1) * sizeof(char));
-	strcpy(*s, temp);
+	*s = mystrdup(temp);
 	return i;
 }
 
-/* copy: copy 'from' into 'to'; assume to is big enough */
-void copy(char **to, char *from)
+char *mystrdup(char *s)
 {
-	int i=0;
+	char *p;
 
-	while ((*to[i] = from[i]) != '\0')
-		++i;
+	p = (char *) malloc(strlen(s)+1);
+	if (p != NULL)
+		strcpy(p, s);
+	return p;
 }
