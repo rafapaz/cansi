@@ -45,7 +45,7 @@ No *addtree(No *root, char *word)
 		p->count = 1;
 		p->left = NULL;
 		p->right = NULL;
-	} else if ((cond = strcmp(word, p->word)) == 0)
+	} else if ((cond = strcasecmp(word, p->word)) == 0)
 		p->count++;
 	else if (cond < 0)
 		p->left = addtree(p->left, word);
