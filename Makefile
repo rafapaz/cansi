@@ -1,17 +1,11 @@
 
-prog := expand
+prog := cross-reference
 
-all: ${prog}.o
-	gcc ${prog}.o -o ${prog}
+all: 
+	gcc ${prog}.c util.c -o ${prog}
 
-${prog}.o: ${prog}.c
-	gcc -c ${prog}.c
-
-debug: ${prog}.debug
-	gcc ${prog}.o -o ${prog}
-
-${prog}.debug: ${prog}.c
-	gcc -c ${prog}.c -g
+debug:
+	gcc ${prog}.c util.c -o ${prog} -g
 
 clean:
 	rm *.o ${prog}

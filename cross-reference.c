@@ -2,24 +2,19 @@
 #include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
-
-#define MAX_LINES 99999
+#include "util.h"
 
 typedef struct tnode {
 	char *word;
 	int count;
-	int lines[MAX_LINES];
+	int lines[MAXLINE];
 	struct tnode *left;
 	struct tnode *right;
 } No;
 
-#define max(x,y) (((x)>(y)) ? (x) : (y))
-#define MAXWORD 256
 
 No *addtree(No *, char *, int);
 void treeprint(No *);
-int getword(char **, int *);
-char *mystrdup(char *s);
 
 int main()
 {
@@ -77,34 +72,4 @@ void treeprint(No *node)
 	printf("\n");
 
 	treeprint(node->right);
-}
-
-int getword(char **w, int *line)
-{
-	int i=0;
-	char c;
-	char temp[MAXWORD];
-	static int l=1;
-
-	while ((c =  getchar()) != ' ' && c != '\n' && c != EOF)
-		temp[i++] = c;
-	
-	*line = l;
-	l += (c == '\n');
-	if (c == EOF) return EOF;
-
-	temp[i--] = '\0';
-	*w = strdup(temp);
-
-	return max(i,0);
-}
-
-char *mystrdup(char *s)
-{
-	char *p;
-
-	p = (char *) malloc(strlen(s)+1);
-	if (p != NULL)
-		strcpy(p, s);
-	return p;
 }
