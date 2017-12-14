@@ -1,5 +1,5 @@
 
-prog := cross-reference
+prog := qsort
 
 all: 
 	gcc ${prog}.c util.c -o ${prog}
