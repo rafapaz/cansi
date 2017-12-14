@@ -11,16 +11,19 @@ No *addLista(No *, char*);
 int main()
 {
 	int line;
-	char *p;
+	char *w;
 	No *lista = NULL;
+	No *p = NULL;
 
-	while ((getword(&p, &line)) != EOF) {
-		lista = addLista(lista, p);
+	lista = (No *) malloc(sizeof(No));
+	lista->word = strdup("");
+	lista->prox = NULL;
+	while ((getword(&w, &line)) != EOF) {
+		lista = addLista(lista, w);
 	}
 
-	if (lista != NULL)
-		while (lista->prox != NULL)
-			printf("%s\n", lista->word);
+	for (p = lista; p->prox != NULL; p = p->prox)
+		printf("%s\n", p->word);
 	
 	return 0;
 }
@@ -35,12 +38,9 @@ No *addLista(No *lista, char *word)
 	new->prox = NULL;
 
 	p = lista;
-	if (p != NULL) {
-		while (p->prox != NULL)
-			p = p->prox;
-		p->prox = new;
-	} else 
-		p = new;
+	while (p->prox != NULL)
+		p = p->prox;
+	p->prox = new;
 
-	return (lista) ? lista : p;
+	return lista;
 }
