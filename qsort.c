@@ -19,16 +19,16 @@ int main()
 		i++;
 	}
 	size = i;
-	strcpy(lista[i],"\0");
+	//strcpy(lista[i],"\0");
 
 	printf("\nNormal: \n");
-	for (i=0;strcmp(lista[i],"\0");i++)
+	for (i=0; i < size; i++)
 		printf("%s\n", lista[i]);
 
-	qsort(lista, size, sizeof(char)*MAX*LEN, comp);
+	qsort(lista, size, LEN, comp);
 
 	printf("Ordenado: \n");
-	for (i=0;strcmp(lista[i],"\0");i++)
+	for (i=0; i < size; i++)
 		printf("%s\n", lista[i]);
 	
 	return 0;
