@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <string.h>
 
-#define HASHSIZE 10
+#define HASHSIZE 500000
 
 typedef struct nlist {
 	struct nlist *next;
@@ -28,9 +29,12 @@ int main()
 	}
 
 	while (getline(&line, &len, stdin) > 0) {
-		token = strsep(&line, ":");
+		if ((token = strsep(&line, ":")) == NULL)
+			continue;
 		temp.name = strdup(token);
-		token = strsep(&line, ":");
+
+		if ((token = strsep(&line, ":")) == NULL)
+			continue;
 		temp.defn = strdup(token);
 		
 		install(temp.name, temp.defn);
