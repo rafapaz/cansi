@@ -17,31 +17,33 @@ int comp(const void *v1, const void *v2);
 
 int main(int argc, char **argv)
 {
-	int i=0, j=0, freqTemp[MAXCHAR], totalToken=0;
+	int i=0, j=0, freqTemp[MAXCHAR], totalChar=0, alphaSize=0, min=0;
 	char c, newName[MAXFILENAME];
 	FILE *fpOrign = NULL;
 	FILE *fpDest = NULL;
-	
-	Node *queue;
+	Node queue[MAXCHAR];
 
 	for (i=0;i < MAXFILENAME;i++)
 		newName[i] = '\0';
-	for (i=0;i < MAXCHAR;i++)
-		freqTemp[i] = 0;
+	for (i=0;i < MAXCHAR;i++) {
+		freqTemp[i] = 0;		
+		queue[i].token = '\0';
+		queue[i].freq = 0;
+		queue[i].left = queue[i].right = NULL;
+	}
 
 	fpOrign = fopen(argv[2], "r");
 	fpDest = fopen(strcat(strcat(newName, argv[2]),".zap"), "w");
 
 	while ((c = getc(fpOrign)) != EOF) {
 		freqTemp[c]++;
-		totalToken++;
+		totalChar++;
 	}
-
-	queue = NULL;
 
 	for (i=0;i < MAXCHAR;i++) {
 		if (freqTemp[i]) {
-			addQueue(queue, i, freqTemp[i], totalToken);
+			alphaSize++;
+			pushSort(queue, i, freqTemp[i]);
 		}
 	}
 
@@ -53,18 +55,27 @@ int main(int argc, char **argv)
 	return 0;
 }
 
-Node *addQueue(Node *q, char t, int f)
+void pushSort(Node *q, char t, int f)
 {
-	Node *p;
+	int i, size_q=0;
 
-	p = q;
-
-	if (p == NULL) {
-		p = (Node *) malloc(sizeof(Node));
-		p->token = t;
-		p->freq = f;
-		
+	for (i=0;i<MAXCHAR;i++)
+		if (q[i].freq) size_q++; 
+	
+	for (i=0;i < size_q; i++) {
+		if (f <= q[i].freq) {
+			for (j=size_q;j >= i;j--) {
+				q[j+1].freq = q[j].freq;
+			}
+			break;
+		}
 	}
+	q[i].token = t;
+	q[i].freq = f;
+}
+
+Node popQueue(Node *q)
+{
 }
 
 Node *addNode(Node *root, char t, int f, int pos)
