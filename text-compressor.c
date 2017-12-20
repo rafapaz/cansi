@@ -15,12 +15,13 @@ typedef struct node
 typedef struct queue
 {
 	int size;
-	Node arr[MAXCHAR];
+	Node *arr[MAXCHAR];
 } Queue;
 
 Node *addTree(Node *root, char t, int f, int pos);
-void pushSortedQueue(Queue *q, char t, int f);
-Node popQueue(Queue * q);
+Node *buildTree(Queue *q);
+void pushSortedQueue(Queue *q, Node *n);
+Node *popQueue(Queue * q);
 
 int main(int argc, char **argv)
 {
@@ -29,7 +30,7 @@ int main(int argc, char **argv)
 	FILE *fpOrign = NULL;
 	FILE *fpDest = NULL;
 	Queue que;
-	Node *rootTree, leaf;
+	Node *rootTree, *temp;
 
 	for (i=0;i < MAXFILENAME;i++)
 		newName[i] = '\0';
@@ -37,9 +38,7 @@ int main(int argc, char **argv)
 	que.size = 0;
 	for (i=0;i < MAXCHAR;i++) {
 		freqTemp[i] = 0;		
-		que.arr[i].token = '\0';
-		que.arr[i].freq = 0;
-		que.arr[i].left = que.arr[i].right = NULL;
+		que.arr[i] = NULL;
 	}
 
 	fpOrign = fopen(argv[2], "r");
@@ -52,18 +51,27 @@ int main(int argc, char **argv)
 	}
 
 	// Build a sorted queue
-	for (i=0;i < MAXCHAR;i++) {
+	for (i=0,j=0;i < MAXCHAR;i++) {
 		if (freqTemp[i]) {
 			alphaSize++;
-			pushSortedQueue(&que, i, freqTemp[i]);
+			temp = (Node *) malloc(sizeof(Node));
+			temp->token = i;
+			temp->freq = freqTemp[i];
+			temp->left = temp->right = NULL;			
+			pushSortedQueue(&que, temp);
+			j++;
 		}
 	}
 
+	for (i=0;i<que.size;i++)
+		printf("%c:%d\n", que.arr[i]->token, que.arr[i]->freq);
+
+	printf("\n");
 	// Build the tree
-	while (que.size) {
-		node1 = popQueue(&que);
-		if (que.size > 1) node2 = popQueue(&que);
-	}
+	rootTree = buildTree(&que);
+	for (i=0;i<que.size;i++)
+		printf("%c:%d -> left:%c:%d -> right:%c:%d\n", que.arr[i]->token, que.arr[i]->freq,
+			que.arr[i]->left->token, que.arr[i]->left->freq, que.arr[i]->right->token, que.arr[i]->right->freq);
 
 	fclose(fpOrign);
 	fclose(fpDest);
@@ -71,30 +79,50 @@ int main(int argc, char **argv)
 	return 0;
 }
 
-void pushSortedQueue(Queue *q, char t, int f)
+Node *buildTree(Queue *q)
+{
+	Node *p, *node1, *node2;
+
+	if (q->size > 1) {
+		node1 = popQueue(q);
+		node2 = popQueue(q);
+
+		p = (Node *) malloc(sizeof(Node));
+		p->token = '\0';
+		p->freq = node1->freq + node2->freq;
+		p->left = node2;
+		p->right = node1;
+		buildTree(q);
+	} else if (q->size == 1)
+		p = popQueue(q);
+
+	pushSortedQueue(q, p);
+	return p;
+}
+
+void pushSortedQueue(Queue *q, Node *n)
 {
 	int i,j;
 	
 	for (i=0;i < q->size; i++) {
-		if (f <= q->arr[i].freq) {
+		if (n->freq <= q->arr[i]->freq) {
 			for (j=q->size;j >= i;j--) {
 				q->arr[j+1] = q->arr[j];
 			}
 			break;
 		}
 	}
-	q->arr[i].token = t;
-	q->arr[i].freq = f;
+	q->arr[i] = n;
 	q->size++;
 }
 
-Node popQueue(Queue *q)
+Node *popQueue(Queue *q)
 {
 	int i;
-	Node ret;
+	Node *ret;
 	
 	ret = q->arr[0];
-	for (i=0;q->arr[i].freq;i++)
+	for (i=0;q->arr[i]!=NULL;i++)
 		q->arr[i] = q->arr[i+1];
 	
 	q->size = (q->size < 1) ? 0 : --(q->size);
