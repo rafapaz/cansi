@@ -12,73 +12,96 @@ typedef struct node
 	struct node *left, *right;
 } Node;
 
-Node *addNode(Node *root, char t, int f, int pos);
-int comp(const void *v1, const void *v2);
+typedef struct queue
+{
+	int size;
+	Node arr[MAXCHAR];
+} Queue;
+
+Node *addTree(Node *root, char t, int f, int pos);
+void pushSortedQueue(Queue *q, char t, int f);
+Node popQueue(Queue * q);
 
 int main(int argc, char **argv)
 {
-	int i=0, j=0, freqTemp[MAXCHAR], totalChar=0, alphaSize=0, min=0;
+	int i=0, j=0, freqTemp[MAXCHAR], totalChar=0, alphaSize=0;
 	char c, newName[MAXFILENAME];
 	FILE *fpOrign = NULL;
 	FILE *fpDest = NULL;
-	Node queue[MAXCHAR];
+	Queue que;
+	Node *rootTree, leaf;
 
 	for (i=0;i < MAXFILENAME;i++)
 		newName[i] = '\0';
+
+	que.size = 0;
 	for (i=0;i < MAXCHAR;i++) {
 		freqTemp[i] = 0;		
-		queue[i].token = '\0';
-		queue[i].freq = 0;
-		queue[i].left = queue[i].right = NULL;
+		que.arr[i].token = '\0';
+		que.arr[i].freq = 0;
+		que.arr[i].left = que.arr[i].right = NULL;
 	}
 
 	fpOrign = fopen(argv[2], "r");
 	fpDest = fopen(strcat(strcat(newName, argv[2]),".zap"), "w");
 
+	// Get frequencies
 	while ((c = getc(fpOrign)) != EOF) {
 		freqTemp[c]++;
 		totalChar++;
 	}
 
+	// Build a sorted queue
 	for (i=0;i < MAXCHAR;i++) {
 		if (freqTemp[i]) {
 			alphaSize++;
-			pushSort(queue, i, freqTemp[i]);
+			pushSortedQueue(&que, i, freqTemp[i]);
 		}
 	}
 
-	//qsort(freqTemp, MAXCHAR, sizeof(int), comp);
-	//printf("%c:%d\n", i, freqTemp[i]);
+	// Build the tree
+	while (que.size) {
+		node1 = popQueue(&que);
+		if (que.size > 1) node2 = popQueue(&que);
+	}
+
 	fclose(fpOrign);
 	fclose(fpDest);
 
 	return 0;
 }
 
-void pushSort(Node *q, char t, int f)
+void pushSortedQueue(Queue *q, char t, int f)
 {
-	int i, size_q=0;
-
-	for (i=0;i<MAXCHAR;i++)
-		if (q[i].freq) size_q++; 
+	int i,j;
 	
-	for (i=0;i < size_q; i++) {
-		if (f <= q[i].freq) {
-			for (j=size_q;j >= i;j--) {
-				q[j+1].freq = q[j].freq;
+	for (i=0;i < q->size; i++) {
+		if (f <= q->arr[i].freq) {
+			for (j=q->size;j >= i;j--) {
+				q->arr[j+1] = q->arr[j];
 			}
 			break;
 		}
 	}
-	q[i].token = t;
-	q[i].freq = f;
+	q->arr[i].token = t;
+	q->arr[i].freq = f;
+	q->size++;
 }
 
-Node popQueue(Node *q)
+Node popQueue(Queue *q)
 {
+	int i;
+	Node ret;
+	
+	ret = q->arr[0];
+	for (i=0;q->arr[i].freq;i++)
+		q->arr[i] = q->arr[i+1];
+	
+	q->size = (q->size < 1) ? 0 : --(q->size);
+	return ret;
 }
 
-Node *addNode(Node *root, char t, int f, int pos)
+Node *addTree(Node *root, char t, int f, int pos)
 {
 	Node *temp, *p;
 
@@ -90,14 +113,10 @@ Node *addNode(Node *root, char t, int f, int pos)
 		p->freq = f;
 		p->left = temp->right = NULL;
 	} else if (!pos)
-		p->left = addNode(p->left, t, f, pos);
+		p->left = addTree(p->left, t, f, pos);
 	else
-		p->right = addNode(p->right, t, f, pos);
+		p->right = addTree(p->right, t, f, pos);
 	
 	return p;
 }
 
-int comp(const void *v1, const void *v2)
-{
-	return (*(int*)v1 - *(int*)v2);
-}
