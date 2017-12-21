@@ -23,6 +23,7 @@ Node *buildTree(Queue *q, int totalFreq);
 Node *buildOneLevelTree(Queue *q);
 void pushSortedQueue(Queue *q, Node *n);
 Node *popQueue(Queue * q);
+void walkTree(Node *n, unsigned short bit, unsigned short *table);
 
 int main(int argc, char **argv)
 {
@@ -32,7 +33,16 @@ int main(int argc, char **argv)
 	FILE *fpDest = NULL;
 	Queue que;
 	Node *rootTree, *temp;
+	unsigned short codeTable[MAXCHAR];
 
+	if (argc < 3 && !(strcmp(argv[1],"-c") || strcmp(argv[1],"-d"))) {
+		printf("Usage: zap -c|-d <filename>\n");
+		printf("       -c : compress\n");
+		printf("       -d : decompress\n");
+		exit(1);
+	}
+
+	// Init everything
 	for (i=0;i < MAXFILENAME;i++)
 		newName[i] = '\0';
 
@@ -40,8 +50,10 @@ int main(int argc, char **argv)
 	for (i=0;i < MAXCHAR;i++) {
 		freqTemp[i] = 0;		
 		que.arr[i] = NULL;
+		codeTable[i] = -1;
 	}
-
+	
+	// Opening files
 	fpOrign = fopen(argv[2], "r");
 	fpDest = fopen(strcat(strcat(newName, argv[2]),".zap"), "w");
 
@@ -51,7 +63,7 @@ int main(int argc, char **argv)
 		totalChar++;
 	}
 
-	// Build a sorted queue
+	// Building a sorted queue
 	for (i=0,j=0;i < MAXCHAR;i++) {
 		if (freqTemp[i]) {
 			alphaSize++;
@@ -64,24 +76,31 @@ int main(int argc, char **argv)
 		}
 	}
 
-	for (i=0;i<que.size;i++)
-		printf("%c:%d\n", que.arr[i]->token, que.arr[i]->freq);
-
-	printf("\n");
-	// Build the tree
+	// Building the tree	
 	rootTree = buildTree(&que, totalChar);
-	printf("root = %d\n", rootTree->freq);
-	for (i=0;i<que.size;i++)
-		printf("%c:%d -> left:%c:%d -> right:%c:%d\n", que.arr[i]->token, que.arr[i]->freq,
-			(que.arr[i]->left!=NULL) ? que.arr[i]->left->token : '\0', 
-			(que.arr[i]->left!=NULL) ? que.arr[i]->left->freq : '\0', 
-			(que.arr[i]->right!=NULL) ? que.arr[i]->right->token : '\0', 
-			(que.arr[i]->right!=NULL) ? que.arr[i]->right->freq : '\0');
+	walkTree(rootTree, 0, codeTable);
+
+	for (i=0,j=0;i < MAXCHAR;i++) 
+		if (codeTable[i] != (unsigned short)-1) printf("%c:%d\n", i, codeTable[i]);
 
 	fclose(fpOrign);
 	fclose(fpDest);
 
 	return 0;
+}
+
+
+void walkTree(Node *n, unsigned short bit, unsigned short *table)
+{
+	if (n==NULL)
+		return;
+	
+	if (n->token != '\0')
+		table[n->token] = bit;
+		//addCodeTable(table, n->token, bit);
+
+	walkTree(n->left, (bit << 1) | 0, table);
+	walkTree(n->right, (bit << 1) | 1, table);
 }
 
 Node *buildTree(Queue *q, int totalFreq)
@@ -168,3 +187,17 @@ Node *addTree(Node *root, char t, int f, int pos)
 	return p;
 }
 
+/*
+void addCodeTable(Code *table, char token, unsigned short code)
+{
+	Code *p, *temp;
+
+	temp = (Code *) malloc(sizeof(Code));
+	temp->token = token;
+	temp->code = code;
+
+	p = table;
+	temp->next = p->next;
+	p->next = temp;
+}
+*/
