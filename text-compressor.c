@@ -19,7 +19,8 @@ typedef struct queue
 } Queue;
 
 Node *addTree(Node *root, char t, int f, int pos);
-Node *buildTree(Queue *q);
+Node *buildTree(Queue *q, int totalFreq);
+Node *buildOneLevelTree(Queue *q);
 void pushSortedQueue(Queue *q, Node *n);
 Node *popQueue(Queue * q);
 
@@ -68,10 +69,14 @@ int main(int argc, char **argv)
 
 	printf("\n");
 	// Build the tree
-	rootTree = buildTree(&que);
+	rootTree = buildTree(&que, totalChar);
+	printf("root = %d\n", rootTree->freq);
 	for (i=0;i<que.size;i++)
 		printf("%c:%d -> left:%c:%d -> right:%c:%d\n", que.arr[i]->token, que.arr[i]->freq,
-			que.arr[i]->left->token, que.arr[i]->left->freq, que.arr[i]->right->token, que.arr[i]->right->freq);
+			(que.arr[i]->left!=NULL) ? que.arr[i]->left->token : '\0', 
+			(que.arr[i]->left!=NULL) ? que.arr[i]->left->freq : '\0', 
+			(que.arr[i]->right!=NULL) ? que.arr[i]->right->token : '\0', 
+			(que.arr[i]->right!=NULL) ? que.arr[i]->right->freq : '\0');
 
 	fclose(fpOrign);
 	fclose(fpDest);
@@ -79,9 +84,23 @@ int main(int argc, char **argv)
 	return 0;
 }
 
-Node *buildTree(Queue *q)
+Node *buildTree(Queue *q, int totalFreq)
 {
 	Node *p, *node1, *node2;
+	
+	p = NULL;
+
+	while (q->arr[0]->freq < totalFreq)
+		p = buildOneLevelTree(q);
+
+	return p;
+}
+
+Node *buildOneLevelTree(Queue *q)
+{
+	Node *p, *node1, *node2;
+	
+	p = NULL;
 
 	if (q->size > 1) {
 		node1 = popQueue(q);
@@ -92,11 +111,12 @@ Node *buildTree(Queue *q)
 		p->freq = node1->freq + node2->freq;
 		p->left = node2;
 		p->right = node1;
-		buildTree(q);
+		buildOneLevelTree(q);
 	} else if (q->size == 1)
 		p = popQueue(q);
 
-	pushSortedQueue(q, p);
+	if (p!=NULL) pushSortedQueue(q, p);
+
 	return p;
 }
 
