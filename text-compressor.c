@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <fcntl.h>
 
 #define MAXCHAR 256
 #define MAXFILENAME 32
+#define MAXBUF 64
 
 typedef struct node
 {
@@ -27,10 +29,10 @@ void walkTree(Node *n, unsigned short bit, unsigned short *table);
 
 int main(int argc, char **argv)
 {
-	int i=0, j=0, freqTemp[MAXCHAR], totalChar=0, alphaSize=0;
+	int i=0, j=0, freqTemp[MAXCHAR], totalChar=0, alphaSize=0, maxCode=0;
+	int fdIn, fdOut, bytes, buff[MAXCHAR];
+	FILE *fpIn = NULL;
 	char c, newName[MAXFILENAME];
-	FILE *fpOrign = NULL;
-	FILE *fpDest = NULL;
 	Queue que;
 	Node *rootTree, *temp;
 	unsigned short codeTable[MAXCHAR];
@@ -54,11 +56,10 @@ int main(int argc, char **argv)
 	}
 	
 	// Opening files
-	fpOrign = fopen(argv[2], "r");
-	fpDest = fopen(strcat(strcat(newName, argv[2]),".zap"), "w");
+	fpIn = fopen(argv[2], "r");
 
 	// Get frequencies
-	while ((c = getc(fpOrign)) != EOF) {
+	while ((c = getc(fpIn)) != EOF) {
 		freqTemp[c]++;
 		totalChar++;
 	}
@@ -81,10 +82,21 @@ int main(int argc, char **argv)
 	walkTree(rootTree, 0, codeTable);
 
 	for (i=0,j=0;i < MAXCHAR;i++) 
-		if (codeTable[i] != (unsigned short)-1) printf("%c:%d\n", i, codeTable[i]);
+		if (codeTable[i] != (unsigned short)-1) 
+			maxCode = (codeTable[i] > maxCode) ? codeTable[i] : maxCode;
+			//printf("%c:%d\n", i, codeTable[i]);
 
-	fclose(fpOrign);
-	fclose(fpDest);
+	fclose(fpIn);
+
+	// Writing compressed file
+	fdIn = open(argv[2], O_RDONLY, 0);
+	fdOut = open(strcat(strcat(newName, argv[2]),".zap"), O_WRONLY, 0666);
+
+	while ((bytes = read(0, buf, MAXBUF)) > 0) {
+		// buf need to be splited and converted
+		write(1, buf, bytes/(sizeInBits(maxCode)*sizeof(char)));
+	}
+	
 
 	return 0;
 }
