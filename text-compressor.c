@@ -26,11 +26,12 @@ Node *buildOneLevelTree(Queue *q);
 void pushSortedQueue(Queue *q, Node *n);
 Node *popQueue(Queue * q);
 void walkTree(Node *n, unsigned short bit, unsigned short *table);
+int sizeInBits(int number);
 
 int main(int argc, char **argv)
 {
 	int i=0, j=0, freqTemp[MAXCHAR], totalChar=0, alphaSize=0, maxCode=0;
-	int fdIn, fdOut, bytes, buff[MAXCHAR];
+	int fdIn, fdOut, bytes_read, buff[MAXCHAR], blockSizeBits;
 	FILE *fpIn = NULL;
 	char c, newName[MAXFILENAME];
 	Queue que;
@@ -81,6 +82,7 @@ int main(int argc, char **argv)
 	rootTree = buildTree(&que, totalChar);
 	walkTree(rootTree, 0, codeTable);
 
+	// Getting max bit block
 	for (i=0,j=0;i < MAXCHAR;i++) 
 		if (codeTable[i] != (unsigned short)-1) 
 			maxCode = (codeTable[i] > maxCode) ? codeTable[i] : maxCode;
@@ -92,15 +94,25 @@ int main(int argc, char **argv)
 	fdIn = open(argv[2], O_RDONLY, 0);
 	fdOut = open(strcat(strcat(newName, argv[2]),".zap"), O_WRONLY, 0666);
 
-	while ((bytes = read(0, buf, MAXBUF)) > 0) {
+	blockSizeBits = 8 * sizeof(char) * sizeInBits(maxCode);
+
+	while ((bytes_read = read(fdIn, bufr, blockSizeInBits)) > 0) {
 		// buf need to be splited and converted
-		write(1, buf, bytes/(sizeInBits(maxCode)*sizeof(char)));
+		// newblockwrite = trad(byte) << 8 - (bits(maxCode) - counter) || newCharRead
 	}
-	
 
 	return 0;
 }
 
+int sizeInBits(int number) 
+{
+	int r=1;
+
+	while (number = (number >> 1))
+		r++;
+	
+	return r;
+}
 
 void walkTree(Node *n, unsigned short bit, unsigned short *table)
 {
