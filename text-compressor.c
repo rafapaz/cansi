@@ -30,10 +30,10 @@ int sizeInBits(int number);
 
 int main(int argc, char **argv)
 {
-	int i=0, j=0, freqTemp[MAXCHAR], totalChar=0, alphaSize=0, maxCode=0;
-	int fdIn, fdOut, bytes_read, buff[MAXCHAR], blockSizeBits;
+	int i=0, j=0, freqTemp[MAXCHAR], totalChar=0, alphaSize=0, maxCode=0, maxBits=0;
+	int fdIn, fdOut, bytes_read, bufr[MAXCHAR], blockSizeBits, buffInt=0;
 	FILE *fpIn = NULL;
-	char c, newName[MAXFILENAME];
+	char c, newName[MAXFILENAME], *p;
 	Queue que;
 	Node *rootTree, *temp;
 	unsigned short codeTable[MAXCHAR];
@@ -87,6 +87,7 @@ int main(int argc, char **argv)
 		if (codeTable[i] != (unsigned short)-1) 
 			maxCode = (codeTable[i] > maxCode) ? codeTable[i] : maxCode;
 			//printf("%c:%d\n", i, codeTable[i]);
+	maxBits = sizeInBits(maxCode);
 
 	fclose(fpIn);
 
@@ -94,11 +95,19 @@ int main(int argc, char **argv)
 	fdIn = open(argv[2], O_RDONLY, 0);
 	fdOut = open(strcat(strcat(newName, argv[2]),".zap"), O_WRONLY, 0666);
 
-	blockSizeBits = 8 * sizeof(char) * sizeInBits(maxCode);
-
+	blockSizeBits = 8 * sizeof(char) * maxBits;
+	
+	memset(bufr, '\0', MAXCHAR);
+	buffInt = 0;
 	while ((bytes_read = read(fdIn, bufr, blockSizeInBits)) > 0) {
-		// buf need to be splited and converted
-		// newblockwrite = trad(byte) << 8 - (bits(maxCode) - counter) || newCharRead
+		for (p = bufr, i=1; *p != '\0'; p++, i++) {
+			buffInt = buffInt | *p;
+			buffInt = buffInt << blockSizeBits - (maxBits * i);
+		}
+		// I stoped here
+
+		buffInt = 0;
+		memset(bufr, '\0', MAXCHAR);
 	}
 
 	return 0;
