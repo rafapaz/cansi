@@ -33,9 +33,9 @@ void testDecompress(char *f);
 int main(int argc, char **argv)
 {
 	int i=0, j=0, freqTemp[MAXCHAR], totalChar=0, alphaSize=0, maxCode=0, maxBits=0;
-	int fdIn, fdOut, bytes_read, bufr[MAXCHAR], blockSizeBits, buffInt=0;
+	int fdIn, fdOut, bytes_read, blockSizeBits, buffInt=0;
 	FILE *fpIn = NULL;
-	char c, tempFileName[MAXFILENAME], *newFile, *p;
+	char c, tempFileName[MAXFILENAME], *newFile, *p, bufr[MAXCHAR];
 	Queue que;
 	Node *rootTree, *temp;
 	unsigned short codeTable[MAXCHAR];
@@ -48,18 +48,15 @@ int main(int argc, char **argv)
 	}
 
 	// Init everything
-	//for (i=0;i < MAXFILENAME;i++)
-	//	tempFileName[i] = '\0';
 	memset(tempFileName, '\0', MAXFILENAME);
-
 	que.size = 0;
 	for (i=0;i < MAXCHAR;i++) {
 		freqTemp[i] = 0;		
 		que.arr[i] = NULL;
 		codeTable[i] = -1;
 	}
-	
-	// Opening files
+
+	// Opening file
 	fpIn = fopen(argv[2], "r");
 
 	// Get frequencies
@@ -105,21 +102,21 @@ int main(int argc, char **argv)
 	write(fdOut, &maxBits, sizeof(int));
 	for (i=0;i < MAXCHAR;i++) 
 		write(fdOut, &(codeTable[i]), sizeof(unsigned short));
-	
 
-	/*
+
 	memset(bufr, '\0', MAXCHAR);
 	buffInt = 0;
-	while ((bytes_read = read(fdIn, bufr, blockSizeInBits)) > 0) {
+	while ((bytes_read = read(fdIn, bufr, blockSizeBits)) > 0) {
 		for (p = bufr, i=1; *p != '\0'; p++, i++) {
-			buffInt = buffInt | *p;
+			buffInt = buffInt | codeTable[*p];
 			buffInt = buffInt << (blockSizeBits - (maxBits * i));
 		}
 
+		write(fdOut, &buffInt, blockSizeBits/8);
 		buffInt = 0;
 		memset(bufr, '\0', MAXCHAR);
 	}
-	*/
+	
 
 	close(fdIn);
 	close(fdOut);
@@ -131,16 +128,27 @@ int main(int argc, char **argv)
 
 void testDecompress(char *f)
 {
-	int fd, maxBits, i;
+	int fd, maxBits, i, reading;
 	unsigned short table[MAXCHAR];
+	char tableInv[MAXCHAR];
 
 	fd = open(f, O_RDONLY, 0);
 	read(fd, &maxBits, sizeof(int));
 	printf("maxBits: %d\n", maxBits);
-	for (i=0;i < MAXCHAR;i++) 
+
+	for (i=0;i < MAXCHAR;i++) {
 		read(fd, &table[i], sizeof(unsigned short));
+		if (table[i]!= (unsigned short)-1) tableInv[table[i]] = i;
+	}
+
 	for (i=0;i < MAXCHAR;i++) 
 		if (table[i]!= (unsigned short)-1) printf("table[ %c ] = %d\n", i, table[i]);
+
+	while (reading = read(fd, &buf, maxBits)) {
+		// TODO: bitwise operations 
+		//printf("%c", );
+	}
+	
 	close(fd);
 }
 
