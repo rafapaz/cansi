@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 #define MAXCHAR 256
 #define MAXFILENAME 32
@@ -27,13 +28,14 @@ void pushSortedQueue(Queue *q, Node *n);
 Node *popQueue(Queue * q);
 void walkTree(Node *n, unsigned short bit, unsigned short *table);
 int sizeInBits(int number);
+void testDecompress(char *f);
 
 int main(int argc, char **argv)
 {
 	int i=0, j=0, freqTemp[MAXCHAR], totalChar=0, alphaSize=0, maxCode=0, maxBits=0;
 	int fdIn, fdOut, bytes_read, bufr[MAXCHAR], blockSizeBits, buffInt=0;
 	FILE *fpIn = NULL;
-	char c, newName[MAXFILENAME], *p;
+	char c, tempFileName[MAXFILENAME], *newFile, *p;
 	Queue que;
 	Node *rootTree, *temp;
 	unsigned short codeTable[MAXCHAR];
@@ -46,8 +48,9 @@ int main(int argc, char **argv)
 	}
 
 	// Init everything
-	for (i=0;i < MAXFILENAME;i++)
-		newName[i] = '\0';
+	//for (i=0;i < MAXFILENAME;i++)
+	//	tempFileName[i] = '\0';
+	memset(tempFileName, '\0', MAXFILENAME);
 
 	que.size = 0;
 	for (i=0;i < MAXCHAR;i++) {
@@ -93,24 +96,52 @@ int main(int argc, char **argv)
 
 	// Writing compressed file
 	fdIn = open(argv[2], O_RDONLY, 0);
-	fdOut = open(strcat(strcat(newName, argv[2]),".zap"), O_WRONLY, 0666);
+	newFile = strcat(strcat(tempFileName, argv[2]),".zap");
+	fdOut = open(newFile, O_WRONLY, 0666);
 
 	blockSizeBits = 8 * sizeof(char) * maxBits;
 	
+	// Writing header
+	write(fdOut, &maxBits, sizeof(int));
+	for (i=0;i < MAXCHAR;i++) 
+		write(fdOut, &(codeTable[i]), sizeof(unsigned short));
+	
+
+	/*
 	memset(bufr, '\0', MAXCHAR);
 	buffInt = 0;
 	while ((bytes_read = read(fdIn, bufr, blockSizeInBits)) > 0) {
 		for (p = bufr, i=1; *p != '\0'; p++, i++) {
 			buffInt = buffInt | *p;
-			buffInt = buffInt << blockSizeBits - (maxBits * i);
+			buffInt = buffInt << (blockSizeBits - (maxBits * i));
 		}
-		// I stoped here
 
 		buffInt = 0;
 		memset(bufr, '\0', MAXCHAR);
 	}
+	*/
+
+	close(fdIn);
+	close(fdOut);
+
+	testDecompress(newFile);
 
 	return 0;
+}
+
+void testDecompress(char *f)
+{
+	int fd, maxBits, i;
+	unsigned short table[MAXCHAR];
+
+	fd = open(f, O_RDONLY, 0);
+	read(fd, &maxBits, sizeof(int));
+	printf("maxBits: %d\n", maxBits);
+	for (i=0;i < MAXCHAR;i++) 
+		read(fd, &table[i], sizeof(unsigned short));
+	for (i=0;i < MAXCHAR;i++) 
+		if (table[i]!= (unsigned short)-1) printf("table[ %c ] = %d\n", i, table[i]);
+	close(fd);
 }
 
 int sizeInBits(int number) 
