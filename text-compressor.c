@@ -32,7 +32,8 @@ void testDecompress(char *f);
 
 int main(int argc, char **argv)
 {
-	int i=0, j=0, freqTemp[MAXCHAR], totalChar=0, alphaSize=0, maxCode=0, maxBits=0;
+	unsigned int totalChar=0;
+	int i=0, j=0, freqTemp[MAXCHAR], maxCode=0, maxBits=0;
 	int fdIn, fdOut, bytes_read, blockSizeBits, buffInt=0;
 	FILE *fpIn = NULL;
 	char c, tempFileName[MAXFILENAME], *newFile, *p, bufr[MAXCHAR];
@@ -61,6 +62,7 @@ int main(int argc, char **argv)
 
 	// Get frequencies
 	while ((c = getc(fpIn)) != EOF) {
+		if (c < 1 || c > 255) continue;
 		freqTemp[c]++;
 		totalChar++;
 	}
@@ -68,7 +70,6 @@ int main(int argc, char **argv)
 	// Building a sorted queue
 	for (i=0,j=0;i < MAXCHAR;i++) {
 		if (freqTemp[i]) {
-			alphaSize++;
 			temp = (Node *) malloc(sizeof(Node));
 			temp->token = i;
 			temp->freq = freqTemp[i];
@@ -144,10 +145,10 @@ void testDecompress(char *f)
 	for (i=0;i < MAXCHAR;i++) 
 		if (table[i]!= (unsigned short)-1) printf("table[ %c ] = %d\n", i, table[i]);
 
-	while (reading = read(fd, &buf, maxBits)) {
+	//while (reading = read(fd, &buf, maxBits)) {
 		// TODO: bitwise operations 
 		//printf("%c", );
-	}
+	//}
 	
 	close(fd);
 }
