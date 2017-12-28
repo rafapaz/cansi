@@ -93,10 +93,10 @@ int main(int argc, char **argv)
 			//printf("%c:%d\n", i, codeTable[i]);
 	maxBits = sizeInBits(maxCode);
 
-	printf("\nBefore\n\n");
-	printf("maxBits: %d\n", maxBits);
-	for (i=0;i < MAXCHAR;i++)
-		if (codeTable[i] != (unsigned short)-1) printf("table[ %c ] = %d\n", i, codeTable[i]);
+	//printf("\nBefore\n\n");
+	//printf("maxBits: %d\n", maxBits);
+	//for (i=0;i < MAXCHAR;i++)
+	//	if (codeTable[i] != (unsigned short)-1) printf("table[ %c ] = %d\n", i, codeTable[i]);
 
 	fclose(fpIn);
 
@@ -131,7 +131,7 @@ int main(int argc, char **argv)
 	close(fdIn);
 	close(fdOut);
 
-	printf("\nAfter\n\n");
+	//printf("\nAfter\n\n");
 	testDecompress(newFile);
 
 	return 0;
@@ -139,28 +139,40 @@ int main(int argc, char **argv)
 
 void testDecompress(char *f)
 {
-	int fd, maxBits, i, reading;
+	int fdIn, fdOut, maxBits, i, reading;
 	unsigned short table[MAXCHAR];
-	char tableInv[MAXCHAR];
+	char buf, tableInv[MAXCHAR], tempFileName[MAXFILENAME], *newFile;
 
-	fd = open(f, O_RDONLY, 0);
-	read(fd, &maxBits, sizeof(int));
-	printf("maxBits: %d\n", maxBits);
+	memset(tempFileName, '\0', MAXFILENAME);
+	newFile = strcat(strcat(tempFileName, f),".final");
+	if ((fdIn = open(f, O_RDONLY, 0)) == -1)
+		die("Decompressing: cannot open reader file");
+	if ((fdOut = open(newFile, O_WRONLY | O_CREAT, 0766)) == -1)
+		die("Decompressing: cannot open file to write");
+
+	read(fdIn, &maxBits, sizeof(int));
+	//printf("maxBits: %d\n", maxBits);
 
 	for (i=0;i < MAXCHAR;i++) {
-		read(fd, &table[i], sizeof(unsigned short));
-		//if (table[i]!= (unsigned short)-1) tableInv[table[i]] = i;
+		read(fdIn, &table[i], sizeof(unsigned short));
+		if (table[i]!= (unsigned short)-1) tableInv[table[i]] = i;
 	}
 
-	for (i=0;i < MAXCHAR;i++) 
-		if (table[i]!= (unsigned short)-1) printf("table[ %c ] = %d\n", i, table[i]);
+	//for (i=0;i < MAXCHAR;i++) 
+	//	if (table[i]!= (unsigned short)-1) printf("table[ %c ] = %d\n", i, table[i]);
+	//for (i=0;i < MAXCHAR;i++)
+	//	printf("tableInv[ %d ] = %c\n", i, tableInv[i]);
 
-	//while (reading = read(fd, &buf, maxBits)) {
+	buf = 0;
+	while ((reading = read(fdIn, &buf, maxBits)) > 0) {
 		// TODO: bitwise operations 
-		//printf("%c", );
-	//}
+		write(fdOut, &tableInv[buf], sizeof(char));
+		//putchar(tableInv[buf]);
+		buf = 0;
+	}
 	
-	close(fd);
+	close(fdIn);
+	close(fdOut);
 }
 
 int sizeInBits(int number) 
