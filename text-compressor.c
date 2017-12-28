@@ -90,12 +90,17 @@ int main(int argc, char **argv)
 			//printf("%c:%d\n", i, codeTable[i]);
 	maxBits = sizeInBits(maxCode);
 
+	printf("\nBefore\n\n");
+	printf("maxBits: %d\n", maxBits);
+	for (i=0;i < MAXCHAR;i++)
+		if (codeTable[i] != (unsigned short)-1) printf("table[ %c ] = %d\n", i, codeTable[i]);
+
 	fclose(fpIn);
 
 	// Writing compressed file
-	fdIn = open(argv[2], O_RDONLY, 0);
+	if (!(fdIn = open(argv[2], O_RDONLY, 0))) fail("Can open reader file");
 	newFile = strcat(strcat(tempFileName, argv[2]),".zap");
-	fdOut = open(newFile, O_WRONLY, 0666);
+	fdOut = open(newFile, O_WRONLY, 0766);
 
 	blockSizeBits = 8 * sizeof(char) * maxBits;
 	
@@ -105,6 +110,7 @@ int main(int argc, char **argv)
 		write(fdOut, &(codeTable[i]), sizeof(unsigned short));
 
 
+	// Writing text
 	memset(bufr, '\0', MAXCHAR);
 	buffInt = 0;
 	while ((bytes_read = read(fdIn, bufr, blockSizeBits)) > 0) {
@@ -122,6 +128,7 @@ int main(int argc, char **argv)
 	close(fdIn);
 	close(fdOut);
 
+	printf("\nAfter\n\n");
 	testDecompress(newFile);
 
 	return 0;
@@ -139,7 +146,7 @@ void testDecompress(char *f)
 
 	for (i=0;i < MAXCHAR;i++) {
 		read(fd, &table[i], sizeof(unsigned short));
-		if (table[i]!= (unsigned short)-1) tableInv[table[i]] = i;
+		//if (table[i]!= (unsigned short)-1) tableInv[table[i]] = i;
 	}
 
 	for (i=0;i < MAXCHAR;i++) 
@@ -258,6 +265,10 @@ Node *addTree(Node *root, char t, int f, int pos)
 		p->right = addTree(p->right, t, f, pos);
 	
 	return p;
+}
+
+void fail(char *)
+{
 }
 
 /*
