@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <stdarg.h>
 
 #define MAXCHAR 256
 #define MAXFILENAME 32
@@ -29,6 +30,8 @@ Node *popQueue(Queue * q);
 void walkTree(Node *n, unsigned short bit, unsigned short *table);
 int sizeInBits(int number);
 void testDecompress(char *f);
+static void die(const char *fmt, ...);
+
 
 int main(int argc, char **argv)
 {
@@ -98,9 +101,9 @@ int main(int argc, char **argv)
 	fclose(fpIn);
 
 	// Writing compressed file
-	if (!(fdIn = open(argv[2], O_RDONLY, 0))) fail("Can open reader file");
 	newFile = strcat(strcat(tempFileName, argv[2]),".zap");
-	fdOut = open(newFile, O_WRONLY, 0766);
+	if ((fdIn = open(argv[2], O_RDONLY, 0)) == -1) die("Cannot open reader file");
+	if ((fdOut = open(newFile, O_WRONLY | O_CREAT, 0766)) == -1) die("Cannot open file to write");
 
 	blockSizeBits = 8 * sizeof(char) * maxBits;
 	
@@ -267,21 +270,13 @@ Node *addTree(Node *root, char t, int f, int pos)
 	return p;
 }
 
-void fail(char *)
+static void die(const char *fmt, ...)
 {
+	va_list argp;
+	va_start(argp, fmt);
+	vfprintf(stderr, fmt, argp);
+	va_end(argp);
+	fputc('\n', stderr);
+	perror("SO says: ");
+	exit(1);
 }
-
-/*
-void addCodeTable(Code *table, char token, unsigned short code)
-{
-	Code *p, *temp;
-
-	temp = (Code *) malloc(sizeof(Code));
-	temp->token = token;
-	temp->code = code;
-
-	p = table;
-	temp->next = p->next;
-	p->next = temp;
-}
-*/
