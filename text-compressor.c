@@ -4,10 +4,12 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdarg.h>
+#include <inttypes.h>
 
 #define MAXCHAR 256
 #define MAXFILENAME 32
 #define MAXBUF 64
+#define min(a,b) (((a) < (b)) ? (a) : (b))
 
 typedef struct node
 {
@@ -26,6 +28,7 @@ Node *addTree(Node *root, char t, int f, int pos);
 Node *buildTree(Queue *q, int totalFreq);
 Node *buildOneLevelTree(Queue *q);
 void pushSortedQueue(Queue *q, Node *n);
+void pushQueue(Queue *q, Node *n);
 Node *popQueue(Queue * q);
 void walkTree(Node *n, unsigned short bit, unsigned short *table);
 int sizeInBits(int number);
@@ -35,9 +38,10 @@ static void die(const char *fmt, ...);
 
 int main(int argc, char **argv)
 {
+	uint64_t buffInt=0;
 	unsigned int totalChar=0;
 	int i=0, j=0, freqTemp[MAXCHAR], maxCode=0, maxBits=0;
-	int fdIn, fdOut, bytes_read, blockSizeBits, buffInt=0;
+	int fdIn, fdOut, bytes_read, blockSizeBits;
 	FILE *fpIn = NULL;
 	char c, tempFileName[MAXFILENAME], *newFile, *p, bufr[MAXCHAR];
 	Queue que;
@@ -70,6 +74,7 @@ int main(int argc, char **argv)
 		totalChar++;
 	}
 
+
 	// Building a sorted queue
 	for (i=0,j=0;i < MAXCHAR;i++) {
 		if (freqTemp[i]) {
@@ -93,10 +98,10 @@ int main(int argc, char **argv)
 			//printf("%c:%d\n", i, codeTable[i]);
 	maxBits = sizeInBits(maxCode);
 
-	//printf("\nBefore\n\n");
-	//printf("maxBits: %d\n", maxBits);
-	//for (i=0;i < MAXCHAR;i++)
-	//	if (codeTable[i] != (unsigned short)-1) printf("table[ %c ] = %d\n", i, codeTable[i]);
+	printf("\nBefore\n\n");
+	printf("maxBits: %d\n", maxBits);
+	for (i=0;i < MAXCHAR;i++)
+		if (codeTable[i] != (unsigned short)-1) printf("table[ %c ] = %d\n", i, codeTable[i]);
 
 	fclose(fpIn);
 
@@ -116,10 +121,10 @@ int main(int argc, char **argv)
 	// Writing text
 	memset(bufr, '\0', MAXCHAR);
 	buffInt = 0;
-	while ((bytes_read = read(fdIn, bufr, blockSizeBits)) > 0) {
+	while ((bytes_read = read(fdIn, bufr, 8)) > 0) {
 		for (p = bufr, i=1; *p != '\0'; p++, i++) {
 			buffInt = buffInt | codeTable[*p];
-			buffInt = buffInt << (blockSizeBits - (maxBits * i));
+			buffInt = buffInt << ((sizeof(uint64_t) * 8) - (maxBits * i));
 		}
 
 		write(fdOut, &buffInt, blockSizeBits/8);
@@ -139,7 +144,7 @@ int main(int argc, char **argv)
 
 void testDecompress(char *f)
 {
-	unsigned long long buf, code, mask;
+	uint64_t buf, code, mask;
 	int fdIn, fdOut, maxBits, i, reading;
 	unsigned short table[MAXCHAR];
 	char tableInv[MAXCHAR], tempFileName[MAXFILENAME], *newFile;
@@ -167,9 +172,9 @@ void testDecompress(char *f)
 	buf = 0;
 	while ((reading = read(fdIn, &buf, 8)) > 0) {
 		// TODO: bitwise operations 
-		for (i=1;i < (sizeof(unsigned long long)*reading)/maxBits; i++) {
-			code = buf >> ((sizeof(unsigned long long) * 8) - (maxBits * i));
-			mask = (((unsigned long long)~0) >> (sizeof(unsigned long long) - maxBits));
+		for (i=1;i < (sizeof(uint64_t)*reading)/maxBits; i++) {
+			code = buf >> ((sizeof(uint64_t) * 8) - (maxBits * i));
+			mask = (((uint64_t)~0) >> (sizeof(uint64_t) - maxBits));
 			code = code & mask;
 			write(fdOut, &tableInv[(int)code], sizeof(char));
 		}
@@ -229,15 +234,23 @@ Node *buildOneLevelTree(Queue *q)
 		p = (Node *) malloc(sizeof(Node));
 		p->token = '\0';
 		p->freq = node1->freq + node2->freq;
-		p->left = node2;
-		p->right = node1;
+		p->left = node1;
+		p->right = node2;
 		buildOneLevelTree(q);
 	} else if (q->size == 1)
 		p = popQueue(q);
 
-	if (p!=NULL) pushSortedQueue(q, p);
+	if (p!=NULL) pushQueue(q, p);
 
 	return p;
+}
+
+void pushQueue(Queue *q, Node *n)
+{
+	int i,j;
+	
+	q->arr[q->size] = n;
+	q->size++;
 }
 
 void pushSortedQueue(Queue *q, Node *n)
