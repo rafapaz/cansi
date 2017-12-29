@@ -139,9 +139,10 @@ int main(int argc, char **argv)
 
 void testDecompress(char *f)
 {
+	unsigned long long buf, code, mask;
 	int fdIn, fdOut, maxBits, i, reading;
 	unsigned short table[MAXCHAR];
-	char buf, tableInv[MAXCHAR], tempFileName[MAXFILENAME], *newFile;
+	char tableInv[MAXCHAR], tempFileName[MAXFILENAME], *newFile;
 
 	memset(tempFileName, '\0', MAXFILENAME);
 	newFile = strcat(strcat(tempFileName, f),".final");
@@ -164,9 +165,14 @@ void testDecompress(char *f)
 	//	printf("tableInv[ %d ] = %c\n", i, tableInv[i]);
 
 	buf = 0;
-	while ((reading = read(fdIn, &buf, maxBits)) > 0) {
+	while ((reading = read(fdIn, &buf, 8)) > 0) {
 		// TODO: bitwise operations 
-		write(fdOut, &tableInv[buf], sizeof(char));
+		for (i=1;i < (sizeof(unsigned long long)*reading)/maxBits; i++) {
+			code = buf >> ((sizeof(unsigned long long) * 8) - (maxBits * i));
+			mask = (((unsigned long long)~0) >> (sizeof(unsigned long long) - maxBits));
+			code = code & mask;
+			write(fdOut, &tableInv[(int)code], sizeof(char));
+		}
 		//putchar(tableInv[buf]);
 		buf = 0;
 	}
