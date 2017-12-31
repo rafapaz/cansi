@@ -121,13 +121,13 @@ int main(int argc, char **argv)
 	// Writing text
 	memset(bufr, '\0', MAXCHAR);
 	buffInt = 0;
-	while ((bytes_read = read(fdIn, bufr, 8)) > 0) {
+	while ((bytes_read = read(fdIn, bufr, (sizeof(uint64_t)*8)/maxBits)) > 0) {
 		for (p = bufr, i=1; *p != '\0'; p++, i++) {
 			buffInt = buffInt | codeTable[*p];
 			buffInt = buffInt << ((sizeof(uint64_t) * 8) - (maxBits * i));
 		}
 
-		write(fdOut, &buffInt, blockSizeBits/8);
+		write(fdOut, &buffInt, sizeof(uint64_t));
 		buffInt = 0;
 		memset(bufr, '\0', MAXCHAR);
 	}
@@ -170,15 +170,13 @@ void testDecompress(char *f)
 	//	printf("tableInv[ %d ] = %c\n", i, tableInv[i]);
 
 	buf = 0;
-	while ((reading = read(fdIn, &buf, 8)) > 0) {
-		// TODO: bitwise operations 
+	while ((reading = read(fdIn, &buf, sizeof(uint64_t))) > 0) {
 		for (i=1;i < (sizeof(uint64_t)*reading)/maxBits; i++) {
 			code = buf >> ((sizeof(uint64_t) * 8) - (maxBits * i));
 			mask = (((uint64_t)~0) >> (sizeof(uint64_t) - maxBits));
 			code = code & mask;
 			write(fdOut, &tableInv[(int)code], sizeof(char));
 		}
-		//putchar(tableInv[buf]);
 		buf = 0;
 	}
 	
